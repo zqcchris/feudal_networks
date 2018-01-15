@@ -15,6 +15,13 @@ Optimal value function: v(0)=1 (there is only one state, state 0)
 import numpy as np
 import gym
 from gym import spaces
+import pandas
+from matplotlib import figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import matplotlib.finance as mpl_finance
+import skimage
+from skimage import transform
+from gym.utils import seeding
 
 class OneRoundDeterministicRewardBoxObsEnv(gym.Env):
     def __init__(self, obs_shape=(64,64,1)):
