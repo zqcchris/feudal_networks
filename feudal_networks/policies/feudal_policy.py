@@ -59,7 +59,7 @@ class FeudalPolicy(policy.Policy):
         self.obs = tf.placeholder(tf.float32, [None] + list(self.obs_space))
         self.r = tf.placeholder(tf.float32,(None,))
         self.ac = tf.placeholder(tf.float32,(None,self.act_space))
-        self.adv = tf.placeholder(tf.float32, [None]) #unused
+        # self.adv = tf.placeholder(tf.float32, [None]) #unused
 
         #specific to FeUdal
         self.prev_g = tf.placeholder(tf.float32, (None,None,self.g_dim))
@@ -92,7 +92,7 @@ class FeudalPolicy(policy.Policy):
                                             activation=tf.nn.elu)
 
             # Calculate manager output g
-            x = tf.expand_dims(self.s, [0])
+            x = tf.expand_dims(self.s, 0)
             self.manager_lstm = SingleStepLSTM(x,\
                                                 self.g_dim,\
                                                 step_size=tf.shape(self.obs)[:1])
@@ -114,7 +114,7 @@ class FeudalPolicy(policy.Policy):
 
             self.worker_vf = self._build_value(flat_logits)
 
-            U = tf.reshape(flat_logits,[-1,num_acts,self.k])
+            self.U = tf.reshape(flat_logits,[-1,num_acts,self.k])
 
             # Calculate w
             cut_g = tf.stop_gradient(self.g)
@@ -122,15 +122,16 @@ class FeudalPolicy(policy.Policy):
             gstack = tf.concat([self.prev_g,cut_g], axis=1)
 
             self.last_c_g = gstack[:,1:]
-            # print self.last_c_g
+            
             gsum = tf.reduce_sum(gstack, axis=1)
             phi = tf.get_variable("phi", (self.g_dim, self.k))
             w = tf.matmul(gsum,phi)
             w = tf.expand_dims(w,[2])
             # Calculate policy and sample
-            logits = tf.reshape(tf.matmul(U,w),[-1,num_acts])
+            logits = tf.reshape(tf.matmul(self.U,w),[-1,num_acts])
             self.pi = tf.nn.softmax(logits)
             self.log_pi = tf.nn.log_softmax(logits)
+            
             self.sample = policy_utils.categorical_sample(
                 tf.reshape(logits,[-1,num_acts]), num_acts)[0, :]
 
