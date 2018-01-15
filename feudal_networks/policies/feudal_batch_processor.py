@@ -31,7 +31,7 @@ class FeudalBatch(object):
         batch_obs = np.asarray(self.obs)
         batch_a = np.asarray(self.a)
         batch_r = np.asarray(self.returns)
-        batch_sd = np.squeeze(np.asarray(self.s_diff))
+        batch_sd = np.asarray(self.s_diff).reshape(self.s_diff[0].shape)
         batch_ri = np.asarray(self.ri)
         batch_gs = np.asarray(self.gsum)
         return Batch(batch_obs,batch_a,batch_r,batch_sd,batch_ri,batch_gs,self.features)
@@ -50,13 +50,13 @@ class FeudalBatchProcessor(object):
     def _extend(self, batch):
         if self.last_terminal:
             self.last_terminal = False
-            self.s = [batch.s[0] for _ in range(self.c)]
-            self.g = [batch.g[0] for _ in range(self.c)]
+            self.s = [batch.s[0] for _ in range(100)]
+            self.g = [batch.g[0] for _ in range(100)]
             # prepend with dummy values so indexing is the same
-            self.obs = [None for _ in range(self.c)]
-            self.a = [None for _ in range(self.c)]
-            self.returns = [None for _ in range(self.c)]
-            self.features = [None for _ in range(self.c)]
+            self.obs = [0 for _ in range(self.c)]
+            self.a = [0 for _ in range(self.c)]
+            self.returns = [0 for _ in range(100)]
+            self.features = [batch.features[0] for _ in range(100)]
 
         # extend with the actual values
         self.obs.extend(batch.obs)
