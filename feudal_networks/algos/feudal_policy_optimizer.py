@@ -11,6 +11,7 @@ import six.moves.queue as queue
 
 from feudal_networks.policies.lstm_policy import LSTMPolicy
 from feudal_networks.policies.feudal_policy import FeudalPolicy
+import gym
 
 def discount(x, gamma):
     return scipy.signal.lfilter([1], [1, -gamma], x[::-1], axis=0)[::-1]
@@ -81,7 +82,7 @@ class RunnerThread(threading.Thread):
     """
     def __init__(self, env, policy, num_local_steps, visualise):
         threading.Thread.__init__(self)
-        self.queue = queue.Queue(5)
+        self.queue = queue.Queue(200)
         self.num_local_steps = num_local_steps
         self.env = env
         self.last_features = None
@@ -132,18 +133,12 @@ def env_runner(env, policy, num_local_steps, summary_writer,visualise):
                                                     fetched[2], fetched[3], \
                                                     fetched[4], fetched[5:]
             action_to_take = action.argmax()
-            # print action_to_take
-            # print action
-            # print g
-            # print s
-            # # exit(0)
             state, reward, terminal, info = env.step(action_to_take)
 
             # collect the experience
             rollout.add(last_state, action, reward, value_, g, s, terminal, last_features)
             length += 1
             rewards += reward
-
             last_state = state
             last_features = features
 
@@ -176,8 +171,10 @@ class FeudalPolicyOptimizer(object):
         self.env = env
         self.task = task
 
-        worker_device = "/job:worker/task:{}/cpu:0".format(task)
-        with tf.device(tf.train.replica_device_setter(1, worker_device=worker_device)):
+        # worker_device = "/job:worker/task:{}/cpu:0".format(task)
+        worker_device = '/cpu:0'
+        # with tf.device(tf.train.replica_device_setter(1, worker_device=worker_device)):
+        with tf.device('/cpu:0'):
             with tf.variable_scope("global"):
                 self.global_step = tf.get_variable("global_step", [], tf.int32, initializer=tf.constant_initializer(0, dtype=tf.int32),
                                                    trainable=False)
@@ -188,6 +185,7 @@ class FeudalPolicyOptimizer(object):
                 self.local_network = pi = FeudalPolicy(env.observation_space.shape, env.action_space.n,self.global_step)
                 pi.global_step = self.global_step
             self.policy = pi
+            
             # build runner thread for collecting rollouts
             self.runner = RunnerThread(env, self.policy, 20,visualise)
 
@@ -207,6 +205,8 @@ class FeudalPolicyOptimizer(object):
             # build train op
             opt = tf.train.AdamOptimizer(1e-4)
             self.train_op = tf.group(opt.apply_gradients(grads_and_vars), inc_step)
+            sess.run(tf.global_variables_initializer())
+            
             self.summary_writer = None
             self.local_steps = 0
 
@@ -280,3 +280,12 @@ class FeudalPolicyOptimizer(object):
             self.summary_writer.add_summary(tf.Summary.FromString(fetched[0]), fetched[-1])
             self.summary_writer.flush()
         self.local_steps += 1
+        
+if __name__ == "__main__":
+    env = gym.make('OneRoundDeterministicRewardBoxObs-v0')
+    with tf.Session() as sess:
+        assert tf.get_default_session() is sess
+        summary_writer = tf.summary.FileWriter("output", sess.graph)
+        feudal_opt = FeudalPolicyOptimizer(env, 0, 'feudal', False)
+        feudal_opt.start(sess, summary_writer)
+        feudal_opt.train(sess)
