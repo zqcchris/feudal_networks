@@ -23,8 +23,8 @@ given a rollout, compute its returns and the advantage
     batch_si = np.asarray(rollout.states)
     batch_a = np.asarray(rollout.actions)
 
-    rewards = np.asarray(rollout.rewards)
-    vpred_t = np.asarray(rollout.values + [rollout.r])
+    # rewards = np.asarray(rollout.rewards)
+    # vpred_t = np.asarray(rollout.values + [rollout.r])
     rewards_plus_v = np.asarray(rollout.rewards + [rollout.r])
     batch_r = discount(rewards_plus_v, gamma)[:-1]
 
