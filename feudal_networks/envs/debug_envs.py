@@ -15,7 +15,7 @@ Optimal value function: v(0)=1 (there is only one state, state 0)
 import numpy as np
 import gym
 from gym import spaces
-import pandas
+import pandas as pd
 from matplotlib import figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import matplotlib.finance as mpl_finance
