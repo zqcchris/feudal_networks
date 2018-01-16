@@ -3,10 +3,11 @@ from gym.envs.registration import register
 register(
     id='OneRoundDeterministicRewardBoxObs-v0',
     entry_point='feudal_networks.envs.debug_envs:OneRoundDeterministicRewardBoxObsEnv',
-    max_episode_steps=1,
-    tags = {
-        'feudal': True
-    }
+    tags={'wrapper_config.TimeLimit.max_episode_steps':1000}
+#     max_episode_steps=1,
+#     tags = {
+#         'feudal': True
+#     }
 )
 
 register(
