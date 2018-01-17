@@ -72,13 +72,13 @@ class OneRoundDeterministicRewardBoxObsEnv(gym.Env):
     
     #reward is calculated with numerical data, aside from the pixel observation
         if action == 1:    #1 is long
-          gain= self.data.iloc[self.idx:(self.idx+50),1:5].as_matrix().max() - self.data.iloc[self.idx,4]
-          loss= self.data.iloc[self.idx:(self.idx+50),1:5].as_matrix().min() - self.data.iloc[self.idx,4]
+          gain= self.data.iloc[self.idx:(self.idx+5),1:5].as_matrix().max() - self.data.iloc[self.idx,4]
+          loss= self.data.iloc[self.idx:(self.idx+5),1:5].as_matrix().min() - self.data.iloc[self.idx,4]
           reward = (abs(gain) - abs(loss))*10000
        
         elif action == 0:  #0 is short
-          gain= self.data.iloc[self.idx,4] - self.data.iloc[self.idx:(self.idx+50),1:5].as_matrix().min()  
-          loss= self.data.iloc[self.idx,4] - self.data.iloc[self.idx:(self.idx+50),1:5].as_matrix().max() 
+          gain= self.data.iloc[self.idx,4] - self.data.iloc[self.idx:(self.idx+5),1:5].as_matrix().min()  
+          loss= self.data.iloc[self.idx,4] - self.data.iloc[self.idx:(self.idx+5),1:5].as_matrix().max() 
           reward = (abs(gain) - abs(loss))*10000
          
         self.idx += self.stack    
